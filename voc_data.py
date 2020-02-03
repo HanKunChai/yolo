@@ -28,13 +28,17 @@ class VocData(object):
 
     def _get_label(self, gt_boxes):
         label = np.zeros(shape=(cell_size, cell_size, (4 + 1) + classes_num), dtype=np.float32)
-        i = np.floor(gt_boxes[:, 0] * cell_size).astype(np.int32)
-        j = np.floor(gt_boxes[:, 1] * cell_size).astype(np.int32)
-        label[i, j, 0:4] = gt_boxes[:, 0:4]
-        # 有物体置信度1  没有为0
-        label[i, j, 4] = 1
-        class_index = gt_boxes[:, 4].astype(np.int32)
-        label[i, j, 4 + class_index] = 1
+        for idx in range(len(gt_boxes)):
+            i = np.floor(gt_boxes[idx, 0] * cell_size).astype(np.int32)
+            j = np.floor(gt_boxes[idx, 1] * cell_size).astype(np.int32)
+            # 这里就是处理多物体竞争 一个cell值只负责处理一个物体
+            if label[i, j, 4] == 1:
+                continue
+            label[i, j, 0:4] = gt_boxes[idx, 0:4]
+            # 有物体置信度1  没有为0
+            label[i, j, 4] = 1
+            class_index = gt_boxes[idx, 4].astype(np.int32)
+            label[i, j, 4 + class_index] = 1
         return label
 
     def _data_generator(self, annotations, batch_size):

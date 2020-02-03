@@ -62,33 +62,44 @@ def resblock_body(x, num_filters, num_blocks):
     return x
 
 
-def darknet_body(x):
+def darknet_body(inputs, trainable):
     '''Darknent body having 52 Convolution2D layers'''
-    x = DarknetConv2D_BN_Leaky(32, (3, 3))(x)
+    x = DarknetConv2D_BN_Leaky(32, (3, 3))(inputs)
     x = resblock_body(x, 64, 1)
     x = resblock_body(x, 128, 2)
     x = resblock_body(x, 256, 8)
     x = resblock_body(x, 512, 8)
     x = resblock_body(x, 1024, 4)
-    return x
+    body_model = Model(inputs=inputs, outputs=x)
+    for layer in body_model.layers:
+        layer.trainable = trainable
+    return body_model
 
 
-def yolo_model(inputs, rate=.5, trainable=True):
-    output = darknet_body(inputs)
+def output_reshape(x):
+    return tf.reshape(x, (-1, cell_size, cell_size, c))
+
+
+def yolo_model(inputs, rate=.5, trainable=False):
+    output = darknet_body(inputs, trainable).output
     output = Flatten()(output)
     output = Dense(512)(output)
     output = LeakyReLU(alpha=.1)(output)
     output = Dense(4096)(output)
     output = LeakyReLU(alpha=.1)(output)
-    output = Dropout(rate=rate, trainable=trainable)(output)
+    output = Dropout(rate=rate)(output)
     output = Dense(output_size, activation='linear')(output)
     output = Lambda(output_reshape)(output)
     model = Model(inputs, output)
     return model
 
 
-def output_reshape(x):
-    return tf.reshape(x, (-1, cell_size, cell_size, c))
+# from keras.layers import Input
+#
+# model = yolo_model(Input(shape=(448, 448, 3)))
+# for layer in model.layers:
+#     print(layer.trainable)
+# model.summary()
 
 
 def model_eval(outputs, im_size, iou_threshold=.5):
@@ -149,7 +160,6 @@ def model_eval(outputs, im_size, iou_threshold=.5):
     classes = tf.gather(argmax_scores, nms_index)
     return bboxes_normal, scores, classes
 
-
 # import numpy as np
 #
 # a = np.array([[0.1, 0.8]])
@@ -172,4 +182,4 @@ def model_eval(outputs, im_size, iou_threshold=.5):
 #     output = sess.run(tf.gather(a, index_a, axis=-1))
 #
 #     print(output, output.shape)
-    # print(sess.run(tf.gather(b, index_b)))
+# print(sess.run(tf.gather(b, index_b)))

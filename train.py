@@ -28,13 +28,13 @@ im_size = cfg.IM_SIZE
 
 # set settings
 log_dir = 'logs/000/'
-weights_path = 'model_data/yolo.h5'
+weights_path = 'logs/yolo.h5'
 
 
 # create model
 input_shape = tuple(list(im_size)[::-1]) + (3,)
 inputs = Input(shape=input_shape)
-model = yolo_model(inputs, trainable=True)
+model = yolo_model(inputs, trainable=False)
 if os.path.exists(weights_path):
     model.load_weights(weights_path, by_name=True, skip_mismatch=True)
 

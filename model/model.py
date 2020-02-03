@@ -133,7 +133,7 @@ def model_eval(outputs, im_size, iou_threshold=.5):
     x_offset = tf.reshape(grid_x, (-1, 1))
     y_offset = tf.reshape(grid_y, (-1, 1))
     x_y_offset = tf.concat([x_offset, y_offset], axis=-1)
-    x_y_offset = tf.cast(tf.reshape(x_y_offset, [cell_size, cell_size, 1, 2]), tf.float32)
+    x_y_offset = tf.cast(tf.reshape(x_y_offset, [1, cell_size, cell_size, 1, 2]), tf.float32)
 
     # (1, 7, 7, 2, 4)
     bboxes_normal = tf.stack([

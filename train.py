@@ -28,7 +28,7 @@ im_size = cfg.IM_SIZE
 
 # set settings
 log_dir = 'logs/000/'
-weights_path = 'logs/yolo.h5'
+weights_path = 'model_data/yolo.h5'
 
 
 # create model
